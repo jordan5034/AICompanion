@@ -41,6 +41,10 @@ public class AI {
         }
     }
 
+    public boolean goalReached(){
+        return grid.getCell(row, col).isOccupied() && grid.getCell(row, col).isGoal();
+    }
+
     // Getters for row and col
     public int getRow() {
         return row;

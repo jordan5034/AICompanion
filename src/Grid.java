@@ -10,6 +10,16 @@ public class Grid {
         initializeGrid();
     }
 
+    // method to set obstacles and goal positions
+    public void setObstaclesAndGoal(){
+        // set which cell is obstacle in grid
+        setObstacle(2, 2, true);
+
+        // set which cell is goal in grid
+        setGoal(4, 4, true);
+
+    }
+
     public int getRows(){
         return rows;
     }
@@ -24,12 +34,23 @@ public class Grid {
                 cells[i][j] = new Cell();
             }
         }
+
+        setObstaclesAndGoal();
     }
 
     // Getter for a specific cell
     public Cell getCell(int row, int col) {
         if (isValidPosition(row, col)) {
             return cells[row][col];
+        } else {
+            throw new IllegalArgumentException("Invalid cell position");
+        }
+    }
+
+    // method to set a cell as the goal
+    public void setGoal(int row, int col, boolean isGoal){
+        if(isValidPosition(row, col)) {
+            cells[row][col].setGoal(isGoal);
         } else {
             throw new IllegalArgumentException("Invalid cell position");
         }
@@ -44,50 +65,9 @@ public class Grid {
         }
     }
 
-    // Convenience method to set a cell as a goal
-    public void setGoal(int row, int col, boolean isGoal) {
-        if (isValidPosition(row, col)) {
-            cells[row][col].setGoal(isGoal);
-        } else {
-            throw new IllegalArgumentException("Invalid cell position");
-        }
-    }
-
     // Check if a given row and column are within bounds
     public boolean isValidPosition(int row, int col) {
         return row >= 0 && row < rows && col >= 0 && col < cols;
-    }
-
-    public void printGrid(){
-
-        // Print column headers
-        System.out.print("  ");
-        for(int j = 0; j < cols; j++){
-            System.out.print(j + " ");
-        }
-        System.out.println();
-
-        for(int i = 0; i < rows; i++){
-            System.out.print(i + " "); // Row header
-            for(int j = 0; j < cols; j++){
-
-                if(cells[i][j].isOccupied()){
-                    System.out.print("A"); // AI position
-                }
-                else if(cells[i][j].isObstacle()){
-                    System.out.print("O"); // Obstacle
-                }
-                else if(cells[i][j].isGoal()){
-                    System.out.print("G"); // Goal
-                }
-                else{
-                    System.out.print(". "); // Empty space
-                }
-            }
-
-            System.out.println(); // To print line by line of the grid
-
-        }
     }
 
 }
