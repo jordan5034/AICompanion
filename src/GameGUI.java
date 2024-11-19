@@ -16,10 +16,12 @@ public class GameGUI extends JFrame implements KeyListener {
 
     public GameGUI(int rows, int cols) {
         grid = new Grid(rows, cols);
+
+        // Generates a random maze
+        //grid.generateMaze();
+
         ai = new AI(grid, 0, 0); // Start AI at position (0, 0)
         gridPanel = new GridPanel(grid); // Create custom panel for grid rendering
-
-        grid.setObstaclesAndGoal(); // initializes obstacles and goal from Grid
 
         this.setTitle("AI Movement Game");
         this.setSize(500,500 ); // Initial window size
