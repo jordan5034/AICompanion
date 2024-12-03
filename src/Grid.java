@@ -1,5 +1,3 @@
-// File: Grid.java
-
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
@@ -31,18 +29,9 @@ public class Grid {
         }
     }
 
-    public void printMaze() {
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                System.out.print(cells[i][j].isObstacle() ? "X " : ". ");
-            }
-            System.out.println();
-        }
-    }
-
     public void setObstaclesAndGoal() {
         generateMaze();
-        cells[rows-1][cols-1].setGoal(true);
+        cells[rows-1][cols-1].setGoal(true); // Our goal will be in the bottom right corner
     }
 
     private void generateMaze() {
@@ -51,6 +40,7 @@ public class Grid {
         boolean validMaze = false;
 
         while (!validMaze && attempts < retryLimit) {
+            System.out.println("Attempt: " + attempts);
             attempts++;
 
             // Step 1: Initialize all cells as obstacles
@@ -121,11 +111,15 @@ public class Grid {
             int newRow = row + direction[0] * 2;
             int newCol = col + direction[1] * 2;
 
-            if (isInBounds(newRow, newCol) && cells[newRow][newCol].isObstacle()) {
+            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && cells[newRow][newCol].isObstacle()) {
+
+                if ((row + direction[0] >= rows - 1 && direction[0] == 1) ||
+                        (col + direction[1] >= cols - 1 && direction[1] == 1)) {
+                    continue;
+                }
+
                 cells[row + direction[0]][col + direction[1]].setObstacle(false);
                 cells[newRow][newCol].setObstacle(false);
-
-                if (newRow == rows - 1 && newCol == cols - 1) return;
 
                 carvePath(newRow, newCol);
             }
@@ -174,5 +168,15 @@ public class Grid {
 
     public boolean isValidPosition(int row, int col) {
         return row >= 0 && row < rows && col >= 0 && col < cols;
+    }
+
+    // To print in console
+    public void printMaze() {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                System.out.print(cells[i][j].isObstacle() ? "X " : ". ");
+            }
+            System.out.println();
+        }
     }
 }

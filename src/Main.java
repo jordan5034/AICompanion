@@ -3,10 +3,12 @@ public class Main {
 
         System.out.println("Started program");
 
-        GameGUI gameGUI = new GameGUI(20, 20); // Create a nxm grid
+        GameGUI gameGUI = new GameGUI(5,5 ); // Create a nxm grid
         System.out.println("GameGUI generated");
 
-        gameGUI.start();
-        System.out.println("Game started");
     }
 }
+
+/*
+* TODO: Implement some sort of sorting algorithm. Maybe a score tracker? Previous games played?
+* */
