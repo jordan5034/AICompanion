@@ -11,8 +11,9 @@ public class AI {
     private int moveStepCount = 0;
     private Timer moveTimer;
 
-    public AI(Grid grid, int row, int col, int cellSize) {
+    public AI(Grid grid, GridPanel gridPanel, int row, int col, int cellSize) {
         this.grid = grid;
+        this.gridPanel = gridPanel;
         this.row = row;
         this.col = col;
         grid.getCell(row, col).setOccupied(true);

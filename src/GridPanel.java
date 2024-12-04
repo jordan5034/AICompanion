@@ -15,6 +15,7 @@ public class GridPanel extends JPanel {
         return cellSize;
     }
 
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);

@@ -3,7 +3,7 @@ public class Main {
 
         System.out.println("Started program");
 
-        GameGUI gameGUI = new GameGUI(5,5 ); // Create a nxm grid
+        GameGUI gameGUI = new GameGUI(20,30 ); // Create a nxm grid
         System.out.println("GameGUI generated");
 
     }

@@ -25,6 +25,10 @@ public class Grid {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 cells[i][j] = new Cell();
+                // Ensure no obstacles on the rightmost column and bottom row
+                if (i == rows - 1 || j == cols - 1) {
+                    cells[i][j].setObstacle(false);
+                }
             }
         }
     }
@@ -111,13 +115,7 @@ public class Grid {
             int newRow = row + direction[0] * 2;
             int newCol = col + direction[1] * 2;
 
-            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && cells[newRow][newCol].isObstacle()) {
-
-                if ((row + direction[0] >= rows - 1 && direction[0] == 1) ||
-                        (col + direction[1] >= cols - 1 && direction[1] == 1)) {
-                    continue;
-                }
-
+            if (newRow >= 0 && newRow < rows - 1 && newCol >= 0 && newCol < cols - 1 && cells[newRow][newCol].isObstacle()) {
                 cells[row + direction[0]][col + direction[1]].setObstacle(false);
                 cells[newRow][newCol].setObstacle(false);
 

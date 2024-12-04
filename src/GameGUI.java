@@ -15,7 +15,7 @@ public class GameGUI extends JFrame implements KeyListener {
     public GameGUI(int rows, int cols) {
         grid = new Grid(rows, cols);
         gridPanel = new GridPanel(grid); // Initialize grid panel first
-        ai = new AI(grid, 0, 0, gridPanel.getCellSize()); // Initialize AI after gridPanel
+        ai = new AI(grid, gridPanel, 0, 0, gridPanel.getCellSize());
 
         grid.printMaze();
         this.setTitle("AI Movement Game");
