@@ -1,104 +1,76 @@
+// GameGUI.java
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 public class GameGUI extends JFrame implements KeyListener {
+    private Timer gameTimer;
     private Grid grid;
     private AI ai;
     private GridPanel gridPanel;
 
+    private boolean paused = false;
+
     public GameGUI(int rows, int cols) {
         grid = new Grid(rows, cols);
-        ai = new AI(grid, 0, 0); // Start AI at position (0, 0)
-        gridPanel = new GridPanel(grid); // Create custom panel for grid rendering
+        gridPanel = new GridPanel(grid); // Initialize grid panel first
+        ai = new AI(grid, gridPanel, 0, 0, gridPanel.getCellSize());
 
+        grid.printMaze();
         this.setTitle("AI Movement Game");
-        this.setSize(500,500 );
+        this.setSize(500, 500);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
-        this.setFocusable(true); // Make the JFrame focusable to receive key events
+        this.setFocusable(true);
         this.addKeyListener(this);
+        this.add(gridPanel); // Add the panel to the frame
 
-        // Add the grid panel to the JFrame
-        this.add(gridPanel);
-
-        this.setVisible(true); // Make the window visible
+        gameTimer = new Timer(100, e -> updateGame());
+        gameTimer.start(); // Start game loop
+        this.setVisible(true);
     }
 
-    public void start() {
-        // Start the game, nothing new here since GUI initialization happens in the constructor
+    private void updateGame() {
+        if (!paused) {
+            gridPanel.repaint(); // Update the panel
+            if (ai.goalReached()) gameWin();
+        }
+    }
+
+    private void gameWin() {
+        paused = true;
+        WinScreen winScreen = new WinScreen();
+        winScreen.addRestartAction(this::restartGame);
+        this.setContentPane(winScreen);
+        this.revalidate();
+        this.repaint();
+    }
+
+    private void restartGame() {
+        this.dispose();
+        new GameGUI(grid.getRows(), grid.getCols());
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
+        int newRow = ai.getRow();
+        int newCol = ai.getCol();
 
-        // Check for arrow key presses and move the AI accordingly
         switch (keyCode) {
-            case KeyEvent.VK_UP:
-                ai.moveUp();
-                break;
-            case KeyEvent.VK_DOWN:
-                ai.moveDown();
-                break;
-            case KeyEvent.VK_LEFT:
-                ai.moveLeft();
-                break;
-            case KeyEvent.VK_RIGHT:
-                ai.moveRight();
-                break;
+            case KeyEvent.VK_UP, KeyEvent.VK_W -> newRow--;
+            case KeyEvent.VK_DOWN, KeyEvent.VK_S -> newRow++;
+            case KeyEvent.VK_LEFT, KeyEvent.VK_A -> newCol--;
+            case KeyEvent.VK_RIGHT, KeyEvent.VK_D -> newCol++;
         }
 
-        // Repaint the panel to reflect the updated state
-        gridPanel.repaint();
+        ai.moveTo(newRow, newCol); // Move AI
     }
 
     @Override
-    public void keyReleased(KeyEvent e) {
-        // Not used, but required to implement KeyListener
-    }
+    public void keyReleased(KeyEvent e) {}
 
     @Override
-    public void keyTyped(KeyEvent e) {
-        // Not used, but required to implement KeyListener
-    }
-
-    // Custom JPanel to draw the grid
-    private static class GridPanel extends JPanel {
-        private Grid grid;
-
-        public GridPanel(Grid grid) {
-            this.grid = grid;
-            setPreferredSize(new Dimension(500, 500)); // Set preferred size for the grid
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-
-            int cellSize = 50; // Size of each grid cell
-            for (int i = 0; i < grid.getRows(); i++) {
-                for (int j = 0; j < grid.getCols(); j++) {
-                    Cell cell = grid.getCell(i, j);
-
-                    // Draw the cell
-                    if (cell.isObstacle()) {
-                        g.setColor(Color.BLACK); // Obstacle color
-                    } else if (cell.isGoal()) {
-                        g.setColor(Color.GREEN); // Goal color
-                    } else if (cell.isOccupied()) {
-                        g.setColor(Color.BLUE); // AI color
-                    } else {
-                        g.setColor(Color.WHITE); // Empty space color
-                    }
-                    g.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-
-                    // Draw grid lines
-                    g.setColor(Color.GRAY);
-                    g.drawRect(j * cellSize, i * cellSize, cellSize, cellSize);
-                }
-            }
-        }
-    }
+    public void keyTyped(KeyEvent e) {}
 }

@@ -1,47 +1,79 @@
+import javax.swing.*;
+
 public class AI {
     private int row, col;
     private Grid grid;
+    private GridPanel gridPanel;
 
-    public AI(Grid grid, int row, int col) {
+    private int pixelX, pixelY;
+    private int targetX, targetY;
+    private static final int MOVE_STEPS = 20; // Increase the number of steps for smoother animation
+    private int moveStepCount = 0;
+    private Timer moveTimer;
+
+    public AI(Grid grid, GridPanel gridPanel, int row, int col, int cellSize) {
         this.grid = grid;
+        this.gridPanel = gridPanel;
         this.row = row;
         this.col = col;
-        this.grid.getCell(row, col).setOccupied(true);
+        grid.getCell(row, col).setOccupied(true);
+
+        this.pixelX = col * cellSize;
+        this.pixelY = row * cellSize;
+        this.targetX = pixelX;
+        this.targetY = pixelY;
     }
 
-    public void moveUp() {
-        if (grid.isValidPosition(row - 1, col) && !grid.getCell(row - 1, col).isObstacle()) {
-            grid.getCell(row, col).setOccupied(false);
-            row--;
-            grid.getCell(row, col).setOccupied(true);
+    public void moveTo(int newRow, int newCol) {
+        // Validate the move
+        if (!grid.isValidPosition(newRow, newCol) || grid.getCell(newRow, newCol).isObstacle()) {
+            return; // Invalid move, do nothing
+        }
+
+        // Update the grid's cell occupation
+        grid.getCell(row, col).setOccupied(false);
+        row = newRow;
+        col = newCol;
+        grid.getCell(row, col).setOccupied(true);
+
+        // Calculate the target pixel positions using the current cell size
+        int cellSize = gridPanel.getCellSize(); // Assuming GridPanel provides a method to access current cell size
+        targetX = col * cellSize;
+        targetY = row * cellSize;
+
+        // Reset animation step count and start animation
+        moveStepCount = 0;
+        if (moveTimer == null) {
+            moveTimer = new Timer(15, e -> animateMove()); // Decrease delay for smoother animation
+        }
+        moveTimer.start();
+    }
+
+    private void animateMove() {
+        if (moveStepCount < MOVE_STEPS) {
+            pixelX += (targetX - pixelX) / (MOVE_STEPS - moveStepCount);
+            pixelY += (targetY - pixelY) / (MOVE_STEPS - moveStepCount);
+            moveStepCount++;
+            gridPanel.repaint(); // Repaint the grid panel to update the AI's position
+        } else {
+            pixelX = targetX;
+            pixelY = targetY;
+            moveTimer.stop();
         }
     }
 
-    public void moveDown() {
-        if (grid.isValidPosition(row + 1, col) && !grid.getCell(row + 1, col).isObstacle()) {
-            grid.getCell(row, col).setOccupied(false);
-            row++;
-            grid.getCell(row, col).setOccupied(true);
-        }
+    public boolean goalReached() {
+        return grid.getCell(row, col).isGoal();
     }
 
-    public void moveLeft() {
-        if (grid.isValidPosition(row, col - 1) && !grid.getCell(row, col - 1).isObstacle()) {
-            grid.getCell(row, col).setOccupied(false);
-            col--;
-            grid.getCell(row, col).setOccupied(true);
-        }
+    public int getPixelX() {
+        return pixelX;
     }
 
-    public void moveRight() {
-        if (grid.isValidPosition(row, col + 1) && !grid.getCell(row, col + 1).isObstacle()) {
-            grid.getCell(row, col).setOccupied(false);
-            col++;
-            grid.getCell(row, col).setOccupied(true);
-        }
+    public int getPixelY() {
+        return pixelY;
     }
 
-    // Getters for row and col
     public int getRow() {
         return row;
     }
