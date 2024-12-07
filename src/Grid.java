@@ -1,15 +1,21 @@
+package games.AICompanion.src;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Map;
+import java.util.HashMap;
 
 public class Grid {
 
     private int rows, cols;
     private Cell[][] cells;
     private final Random random;
+
+    private boolean pathUpdated = false;
 
     public Grid(int rows, int cols) {
         this.rows = rows;
@@ -18,95 +24,27 @@ public class Grid {
         this.random = new Random();
 
         initializeGrid();
-        setObstaclesAndGoal();
+        generateMaze();
+        ensureGoalReachable();
     }
 
     private void initializeGrid() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 cells[i][j] = new Cell();
-                // Ensure no obstacles on the rightmost column and bottom row
-                if (i == rows - 1 || j == cols - 1) {
-                    cells[i][j].setObstacle(false);
-                }
+                cells[i][j].setPosition(i, j);
+                cells[i][j].setObstacle(true); // Initially, all cells are obstacles
             }
         }
-    }
-
-    public void setObstaclesAndGoal() {
-        generateMaze();
-        cells[rows-1][cols-1].setGoal(true); // Our goal will be in the bottom right corner
     }
 
     private void generateMaze() {
-        int retryLimit = 100; // max attempts to generate a valid maze
-        int attempts = 0;
-        boolean validMaze = false;
-
-        while (!validMaze && attempts < retryLimit) {
-            System.out.println("Attempt: " + attempts);
-            attempts++;
-
-            // Step 1: Initialize all cells as obstacles
-            for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < cols; j++) {
-                    cells[i][j].setObstacle(true);
-                    cells[i][j].setGoal(false);
-                }
-            }
-
-            // Step 2: Generate the maze using a randomized algorithm
-            carvePath(0, 0);
-
-            // Step 3: Ensure the goal is reachable
-            ensureGoalReachable();
-
-            // Step 4: Validate the maze using BFS
-            validMaze = isMazeSolvable();
-        }
-
-        if (!validMaze) {
-            throw new RuntimeException("Failed to generate a valid maze after " + retryLimit + " attempts.");
-        }
-    }
-
-    private boolean isMazeSolvable() {
-        boolean[][] visited = new boolean[rows][cols];
-        Queue<int[]> queue = new LinkedList<>();
-        queue.add(new int[]{0, 0});
-        visited[0][0] = true;
-
-        int[] rowOffsets = {-1, 1, 0, 0};
-        int[] colOffsets = {0, 0, -1, 1};
-
-        while (!queue.isEmpty()) {
-            int[] current = queue.poll();
-            int currRow = current[0];
-            int currCol = current[1];
-
-            if (currRow == rows - 1 && currCol == cols - 1) {
-                return true;
-            }
-
-            for (int i = 0; i < 4; i++) {
-                int newRow = currRow + rowOffsets[i];
-                int newCol = currCol + colOffsets[i];
-
-                if (isInBounds(newRow, newCol) && !visited[newRow][newCol] && !cells[newRow][newCol].isObstacle()) {
-                    visited[newRow][newCol] = true;
-                    queue.add(new int[]{newRow, newCol});
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private boolean isInBounds(int row, int col) {
-        return row >= 0 && row < rows && col >= 0 && col < cols;
+        carvePath(0, 0);
     }
 
     private void carvePath(int row, int col) {
+        cells[row][col].setObstacle(false); // Mark the current cell as part of the path
+
         int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
         List<int[]> shuffledDirections = new ArrayList<>(List.of(directions));
         Collections.shuffle(shuffledDirections, random);
@@ -115,24 +53,21 @@ public class Grid {
             int newRow = row + direction[0] * 2;
             int newCol = col + direction[1] * 2;
 
-            if (newRow >= 0 && newRow < rows - 1 && newCol >= 0 && newCol < cols - 1 && cells[newRow][newCol].isObstacle()) {
+            if (isInBounds(newRow, newCol) && cells[newRow][newCol].isObstacle()) {
                 cells[row + direction[0]][col + direction[1]].setObstacle(false);
-                cells[newRow][newCol].setObstacle(false);
-
                 carvePath(newRow, newCol);
             }
         }
     }
 
     private void ensureGoalReachable() {
-        int goalRow = rows - 1;
-        int goalCol = cols - 1;
+        Cell goal = cells[rows - 1][cols - 1];
+        goal.setGoal(true);
+        goal.setObstacle(false);
 
-        cells[goalRow][goalCol].setObstacle(false);
-
-        if (!hasAdjacentOpenCell(goalRow, goalCol)) {
-            if (goalRow - 1 >= 0) cells[goalRow - 1][goalCol].setObstacle(false);
-            else if (goalCol - 1 >= 0) cells[goalRow][goalCol - 1].setObstacle(false);
+        if (!hasAdjacentOpenCell(goal.getRow(), goal.getCol())) {
+            if (goal.getRow() - 1 >= 0) cells[goal.getRow() - 1][goal.getCol()].setObstacle(false);
+            else if (goal.getCol() - 1 >= 0) cells[goal.getRow()][goal.getCol() - 1].setObstacle(false);
         }
     }
 
@@ -148,33 +83,104 @@ public class Grid {
         return false;
     }
 
+    public boolean isValidPosition(int newRow, int newCol) {
+        return isInBounds(newRow, newCol) &&
+                !cells[newRow][newCol].isObstacle() &&
+                !cells[newRow][newCol].isOccupied();
+    }
+
+    private boolean isInBounds(int row, int col) {
+        return row >= 0 && row < rows && col >= 0 && col < cols;
+    }
+
+    public boolean goalReached(int row, int col) {
+        return cells[row][col].isGoal();
+    }
+
     public Cell getCell(int row, int col) {
-        if (isValidPosition(row, col)) {
+        if (isInBounds(row, col)) {
             return cells[row][col];
         } else {
             throw new IllegalArgumentException("Invalid cell position");
         }
     }
 
-    public int getRows(){
-        return rows;
-    }
-
-    public int getCols(){
-        return cols;
-    }
-
-    public boolean isValidPosition(int row, int col) {
-        return row >= 0 && row < rows && col >= 0 && col < cols;
-    }
-
-    // To print in console
     public void printMaze() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                System.out.print(cells[i][j].isObstacle() ? "X " : ". ");
+                if (cells[i][j].isGoal()) {
+                    System.out.print("G ");
+                } else if (cells[i][j].isPath()) {
+                    System.out.print("* ");
+                } else {
+                    System.out.print(cells[i][j].isObstacle() ? "X " : ". ");
+                }
             }
             System.out.println();
         }
+    }
+
+    public void displayCorrectPath() {
+        if (solveAndCheckMaze()) {
+            pathUpdated = true;
+        } else {
+            System.out.println("No solution found for the maze.");
+        }
+    }
+
+    public boolean isPathUpdated(){
+        return pathUpdated;
+    }
+    public void resetPathUpdated(){
+        pathUpdated = false;
+    }
+
+    private boolean solveAndCheckMaze() {
+        Queue<Cell> queue = new LinkedList<>();
+        boolean[][] visited = new boolean[rows][cols];
+        Map<Cell, Cell> parentMap = new HashMap<>();
+
+        Cell start = cells[0][0];
+        Cell goal = cells[rows - 1][cols - 1];
+
+        queue.add(start);
+        visited[start.getRow()][start.getCol()] = true;
+
+        while (!queue.isEmpty()) {
+            Cell current = queue.poll();
+
+            if (current == goal) {
+                Cell pathCell = goal;
+                while (pathCell != start) {
+                    pathCell.setPath(true);
+                    pathCell = parentMap.get(pathCell);
+                }
+                start.setPath(true);
+                return true;
+            }
+
+            int[][] directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+            for (int[] dir : directions) {
+                int newRow = current.getRow() + dir[0];
+                int newCol = current.getCol() + dir[1];
+
+                if (isInBounds(newRow, newCol) && !visited[newRow][newCol] && !cells[newRow][newCol].isObstacle()) {
+                    visited[newRow][newCol] = true;
+                    Cell neighbor = cells[newRow][newCol];
+                    parentMap.put(neighbor, current);
+                    queue.add(neighbor);
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public int getRows() {
+        return rows;
+    }
+
+    public int getCols() {
+        return cols;
     }
 }
