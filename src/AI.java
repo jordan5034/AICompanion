@@ -1,3 +1,5 @@
+package games.AICompanion.src;
+
 import javax.swing.*;
 
 public class AI {

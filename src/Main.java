@@ -1,9 +1,11 @@
+package games.AICompanion.src;
+
 public class Main {
     public static void main(String[] args) {
 
         System.out.println("Started program");
 
-        GameGUI gameGUI = new GameGUI(20,30 ); // Create a nxm grid
+        AICompanionGameGUI gameGUI = new AICompanionGameGUI(20, 30); // Create a nxm grid
         System.out.println("GameGUI generated");
 
     }
